@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Calendar from '../../assets/calendar.svg'
 import Clock from '../../assets/clock.svg'
 import Money from '../../assets/money.svg'
@@ -8,11 +8,11 @@ import { Container } from './styles';
 import { loadLists } from '../../services/api';
 import './card.scss'
 
+const apis = loadLists();
 
 export default function Card({data}) {
   return (
     <Container>
-
 
       <section className="timeline">
         <div className="container">
@@ -23,8 +23,8 @@ export default function Card({data}) {
                 <li>
                   <img className="timeline-icon" src={Calendar} alt="" />
                 
-                  
-                  <span>21/07/2019</span>
+                  {apis.map(api => <span key={api.timestamp} data={api} />)}
+                  {console.log(data)}
                 </li>
                 <li>
                   <img className="timeline-icon" src={Clock} alt="" />
