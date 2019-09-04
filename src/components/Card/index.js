@@ -3,7 +3,7 @@ import Header from '../Header';
 import Board from '../Boad';
 
 const Card = (props) => {
-    const renderedList = props.data.map((data) => {
+    const list = props.data.map((data) => {
         return (
             <li>
                 <div className="timeline-badge"><img src="icons/check.svg" alt="check"/></div>
@@ -15,7 +15,7 @@ const Card = (props) => {
 
         );
     });
-    return <ul className="timeline">{renderedList}</ul>
+    return <ul className="timeline">{list}</ul>
 }
 
 export default Card;
