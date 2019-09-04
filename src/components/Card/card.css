@@ -63,19 +63,6 @@ html, body {
   animation-name: fadeInRight;
 }
 
-@keyframes fadeInRight {
-   0% {
-    opacity: 0;
-    -webkit-transform: translateX(150px);
-  }
-  60% {
-    opacity: 1;
-    -webkit-transform: translateX(-15px);
-  }
-  100% {
-    -webkit-transform: translateX(0);
-  }
-}
 
 .timeline>li>.timeline-panel:after {
   position: absolute;
@@ -183,13 +170,4 @@ tbody>tr:last-child {
 
 th, td {
   padding: 8px 0px;
-}
-
-@media (max-width: 768px) {
-  .timeline {
-    padding: 30px 5px;
-  }
-  .timeline:before {
-    left: 5px;
-  }
 }
