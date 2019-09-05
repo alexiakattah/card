@@ -1,66 +1,70 @@
-import React, { Component } from 'react'
-import moment from 'moment'
+import React from 'react';
+import api from './services/api';
+import Card from './components/Card';
+import './styles/main.css'
 
-import Card from './components/Card'
-
-class App extends Component {
+class App extends React.Component {
   constructor(props) {
-    super(props)
-    this.state = {
-      data: []
-    }
-  }
- 
-  componentDidMount() {
-    this.props.api.loadEvents()
-      .then(res => {
-        const { events } = res.data
-
-        const compras = events.filter(comprou => {
-          if (comprou.event === 'comprou') {
-            comprou.produtos = events.filter(comprouProduto => comprouProduto.event === 'comprou-produto')
-              .filter(e => {
-                const agrupamentoProd = e.custom_data
-                  .filter(d => d.key === 'transaction_id' && d.value === (comprou.custom_data
-                    .filter(x => x.key === 'transaction_id'))[0].value)
-                if (agrupamentoProd.length > 0) {
-                  e.productName = (e.custom_data.filter(p => p.key === 'product_name'))[0].value
-                  e.productPrice = (e.custom_data.filter(p => p.key === 'product_price'))[0].value
-  
-                  return e
-                }
-                return false
-            })
-            comprou.storeName = (comprou.custom_data.filter(p => p.key === 'store_name'))[0].value
-            comprou.data = moment(comprou.timestamp).format('DD/MM/YYYY H:m')
-            
-            return comprou;
-          }
-          return false
-        }).sort(this.ordenacao)
-
-        this.setState({ data: compras })
-      })
+    super(props);
+    this.state = { compra: [] };
   }
 
-  ordenacao = (a, b) => {
-    if (a.timestamp > b.timestamp) {
-      return 1
-    }
-    if (a.timestamp < b.timestamp) {
-      return -1
-    }
-    
-    return 0
+  async componentDidMount() {
+    const response = await api.get();
+    let arrayCorrigido = [];
+    response.data.events.forEach(event => {
+      const transactionIdIndex = event.custom_data.findIndex(x => x.key === 'transaction_id');
+      const transaction_id = event.custom_data[transactionIdIndex].value;
+      const arrayIndex = arrayCorrigido.findIndex(x => x.transaction_id === transaction_id);
+
+      let store_name, product;
+
+      if (event.custom_data.findIndex(x => x.key === 'store_name') === -1) {
+        product = this.formatProduct(event.custom_data);
+      } else {
+        store_name = event.custom_data[event.custom_data.findIndex(x => x.key === 'store_name')].value;
+      }
+      if (arrayIndex === -1) {
+        let products = [];
+        if (product !== undefined && product != null && product !== {}) {
+          products.push(product);
+        }
+        (store_name && store_name.length) ? arrayCorrigido.push({ created_on: event.timestamp, total_price: event.revenue, transaction_id, products, store_name }) : arrayCorrigido.push({ created_on: event.timestamp, total_price: event.revenue, transaction_id, products });
+      } else {
+        let productListing = arrayCorrigido[arrayIndex];
+        if (product !== undefined && product != null && product !== {}) {
+          productListing.products.push(product);
+        }
+        if (!productListing.store_name && store_name && store_name.length) {
+          productListing.store_name = store_name;
+        }
+        if (!productListing.total_price && event.revenue) {
+          productListing.total_price = event.revenue
+        }
+        arrayCorrigido[arrayIndex] = productListing;
+      }
+    });
+    this.setState({ compra: arrayCorrigido.reverse(this.state.compra.created_on) });
+  };
+
+  formatProduct(product) {
+    let productFormatted = {};
+    productFormatted.name = product[product.findIndex(x => x.key === 'product_name')].value;
+    productFormatted.price = product[product.findIndex(x => x.key === 'product_price')].value;
+    return productFormatted;
   }
 
   render() {
     return (
-      <div className="App">
-        <Card compras={this.state.data} />
+      <div className="container" >
+        <div className="row">
+          <div className="col-md-6">
+            <Card data={this.state.compra} />
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 }
 
-export default App
+export default App;
